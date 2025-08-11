@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArduinoSolutions Portfolio</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/framer-motion@11.3.28/dist/framer-motion.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.7.2/dist/vanilla-tilt.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.4s ease, color 0.4s ease;
+      overscroll-behavior: none;
+    }
+    .parallax-bg {
+      background: linear-gradient(135deg, #003d47 0%, #00b7d4 100%);
+      background-attachment: fixed;
+      background-size: cover;
+      position: relative;
+      overflow: hidden;
+    }
+    .particle-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><circle cx="100" cy="100" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="300" cy="200" r="1.8" fill="rgba(255,255,255,0.4)"/><circle cx="500" cy="400" r="2.2" fill="rgba(255,255,255,0.3)"/><circle cx="700" cy="300" r="1.5" fill="rgba(255,255,255,0.4)"/><circle cx="200" cy="600" r="1.8" fill="rgba(255,255,255,0.3)"/></svg>');
+      animation: particles 15s linear infinite;
+    }
+    @keyframes particles {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-1000px); }
+    }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(35px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+    }
+    .card-hover {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glow-effect {
+      box-shadow: 0 0 20px rgba(0, 183, 212, 0.5);
+    }
+    .btn-gradient {
+      background: linear-gradient(135deg, #003d47 0%, #00b7d4 100%);
+      transition: all 0.4s ease;
+    }
+    .btn-gradient:hover {
+      background: linear-gradient(135deg, #005a67 0%, #00d4f1 100%);
+      transform: scale(1.05) translateY(-3px);
+      box-shadow: 0 12px 24px rgba(0, 76, 87, 0.5);
+    }
+    .filter-btn {
+      transition: all 0.4s ease;
+    }
+    .filter-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 76, 87, 0.3);
+    }
+    .filter-btn.active {
+      background: linear-gradient(135deg, #003d47 0%, #00b7d4 100%);
+      color: white;
+      box-shadow: 0 6px 18px rgba(0, 76, 87, 0.5);
+    }
+    .navbar-sticky {
+      transition: box-shadow 0.3s ease;
+    }
+    .navbar-sticky.scrolled {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 100;
+    }
+    .loading-spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #00b7d4;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    [aria-hidden="true"] {
+      pointer-events: none;
+    }
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #00b7d4;
+    }
+    .h1-text {
+      color: white;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 183, 212, 0.4);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-400">
+  <div id="root"></div>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+  </script>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    const motion = window.framerMotion ? window.framerMotion.motion : null;
+
+    const MotionWrapper = ({ children, ...props }) => {
+      if (motion) {
+        return React.createElement(motion.div, { ...props, transition: { ...props.transition, ease: 'easeInOut' } }, children);
+      }
+      return React.createElement('div', props, children);
+    };
+
+    // Translations
+    const translations = {
+      en: {
+        navbar: {
+          home: "Home",
+          portfolio: "Portfolio",
+          contact: "Contact",
+          themeToggle: "Switch to dark mode",
+          themeToggleDark: "Switch to light mode",
+          languageToggle: "English",
+          languageToggleOther: "Swedish"
+        },
+        hero: {
+          title: "ArduinoSolutions",
+          subtitle: "Empowering the future with innovative Arduino-based technology solutions.",
+          cta: "Explore Our Projects"
+        },
+        portfolio: {
+          title: "Previous Projects",
+          subtitle: "Discover our innovative solutions in IoT, robotics, and web applications.",
+          noProjects: "No projects found in this category.",
+          loading: "Loading projects..."
+        },
+        footer: {
+          title: "Let's Collaborate",
+          subtitle: "Ready to bring your Arduino vision to life? Let's create something extraordinary.",
+          email: "📧 j3zp3rz@gmail.com",
+          emailNote: "Open for freelance projects and collaborations",
+          copyright: "© 2025 ArduinoSolutions. All rights reserved."
+        },
+        categories: {
+          all: "All",
+          iot: "IoT",
+          mobile: "Apps",
+          webapps: "Web Apps",
+        },
+        projectModal: {
+          visit: "Visit Project",
+          close: "Close",
+          details: "Project Details"
+        }
+      },
+      sv: {
+        navbar: {
+          home: "Hem",
+          portfolio: "Portfölj",
+          contact: "Kontakt",
+          themeToggle: "Byt till mörkt läge",
+          themeToggleDark: "Byt till ljust läge",
+          languageToggle: "Engelska",
+          languageToggleOther: "Svenska"
+        },
+        hero: {
+          title: "ArduinoSolutions",
+          subtitle: "Framtidens teknik med innovativa Arduino-baserade lösningar.",
+          cta: "Upptäck våra projekt"
+        },
+        portfolio: {
+          title: "Våra projekt",
+          subtitle: "Upptäck våra innovativa lösningar inom IoT, robotik och webbapplikationer.",
+          noProjects: "Inga projekt hittades i denna kategori.",
+          loading: "Laddar projekt..."
+        },
+        footer: {
+          title: "Låt oss samarbeta",
+          subtitle: "Redo att förverkliga din Arduino-vision? Låt oss skapa något extraordinärt.",
+          email: "📧 j3zp3rz@gmail.com",
+          emailNote: "Öppen för frilansprojekt och samarbeten",
+          copyright: "© 2025 ArduinoSolutions. Alla rättigheter förbehållna."
+        },
+        categories: {
+          all: "Alla",
+          iot: "IoT",
+          webapps: "Webbappar",
+          mobile: "Mobilappar",
+        },
+        projectModal: {
+          visit: "Besök projekt",
+          close: "Stäng",
+          details: "Projektdetaljer"
+        }
+      }
+    };
+
+    // Sample portfolio data
+    const portfolioItems = [
+      {
+        id: 1,
+        title: "TrimTime",
+        description: {
+          en: "Real-time queue management system for barbershops",
+          sv: "Realtidssystem för köhantering för frisörsalonger"
+        },
+        category: "mobile",
+        image: "TrimtimeIMG.jpeg",
+        link: "#",
+        details: {
+          en: "Built with React Native, Node.js, and Firebase for seamless queue management.",
+          sv: "Byggd med React Native, Node.js och Firebase för smidig köhantering."
+        }
+      },
+      {
+        id: 2,
+        title: "BlueGreenFarming",
+        description: {
+          en: "IoT greenhouse solution",
+          sv: "IoT-växthuslösning"
+        },
+        category: "IoT",
+        image: "bluegreenfarming.jpg",
+        link: "#",
+        details: {
+          en: "Automated irrigation system with Arduino and ESP32, featuring real-time data logging and cloud integration.",
+          sv: "Automatiserat bevattningssystem med Arduino och ESP32, med realtidsdataloggning och molnintegration."
+        }
+      },
+      {
+        id: 3,
+        title: "1D Pong",
+        description: {
+          en: "1D Pong game with Arduino",
+          sv: "1D Pong-spel med Arduino"
+        },
+        category: "IoT",
+        image: "Pong.jpg",
+        link: "#",
+        details: {
+          en: "Powered by Arduino Uno, delivering a unique single-dimension gaming experience.",
+          sv: "Drivs av Arduino Uno, ger en unik endimensionell spelupplevelse."
+        }
+      },
+      {
+        id: 4,
+        title: "OmegaLax",
+        description: {
+          en: "Web app for managing real-time fish farm data with Arduino integration",
+          sv: "Webbapp för hantering av realtidsdata för fiskodling med Arduino-integration"
+        },
+        category: "Web Apps",
+        image: "omegalax.png",
+        link: "#",
+        details: {
+          en: "Developed with Ajax, Node.js, and MongoDB, integrated with Arduino for real-time data.",
+          sv: "Utvecklad med Ajax, Node.js och MongoDB, integrerad med Arduino för realtidsdata."
+        }
+      }
+    ];
+
+    // Navigation Bar Component
+    function Navbar({ toggleTheme, isDark, language, setLanguage }) {
+      const t = translations[language].navbar;
+      const [isScrolled, setIsScrolled] = useState(false);
+
+      useEffect(() => {
+        const handleScroll = () => {
+          setIsScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      return (
+        <MotionWrapper
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.5 }}
+          className={`bg-white/95 dark:bg-gray-800/95 fixed w-full z-20 glass-effect navbar-sticky ${isScrolled ? 'scrolled' : ''}`}
+          role="navigation"
+          aria-label="Main navigation"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16 items-center">
+              <div className="flex items-center">
+                <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white" aria-label="ArduinoSolutions">
+                  ArduinoSolutions
+                </h1>
+              </div>
+              <div className="flex items-center space-x-6">
+                <MotionWrapper
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <a href="#home" className="hover:text-teal-400 transition-colors font-semibold" title={t.home} aria-label={t.home}>{t.home}</a>
+                </MotionWrapper>
+                <MotionWrapper
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <a href="#portfolio" className="hover:text-teal-400 transition-colors font-semibold" title={t.portfolio} aria-label={t.portfolio}>{t.portfolio}</a>
+                </MotionWrapper>
+                <MotionWrapper
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <a href="#contact" className="hover:text-teal-400 transition-colors font-semibold" title={t.contact} aria-label={t.contact}>{t.contact}</a>
+                </MotionWrapper>
+                <MotionWrapper
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-teal-100 dark:hover:bg-teal-900 transition-all duration-300 text-sm font-semibold cursor-pointer glow-effect"
+                    aria-label={t.languageToggle}
+                    title={t.languageToggleOther}
+                  >
+                    <option value="en">🇬🇧 {t.languageToggle}</option>
+                    <option value="sv">🇸🇪 {t.languageToggleOther}</option>
+                  </select>
+                </MotionWrapper>
+                <MotionWrapper
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                >
+                
+                </MotionWrapper>
+              </div>
+            </div>
+          </div>
+        </MotionWrapper>
+      );
+    }
+
+    // Hero Section Component
+    function Hero({ language }) {
+      const t = translations[language].hero;
+      return (
+        <section id="home" className="min-h-screen flex items-center justify-center parallax-bg relative" aria-label="Hero section">
+          <div className="particle-bg" aria-hidden="true"></div>
+          <MotionWrapper
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center relative z-10"
+          >
+            <MotionWrapper
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <h1 className="text-6xl sm:text-7xl font-extrabold mb-6 h1-text" aria-label={t.title}>
+                {t.title}
+              </h1>
+            </MotionWrapper>
+            <MotionWrapper
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <p className="text-xl sm:text-2xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed">
+                {t.subtitle}
+              </p>
+            </MotionWrapper>
+            <MotionWrapper
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <a
+                href="#portfolio"
+                className="inline-block btn-gradient text-white font-semibold py-4 px-12 rounded-xl text-lg hover:shadow-lg transition-all duration-300 pulse glow-effect"
+                title={t.cta}
+                aria-label={t.cta}
+              >
+                {t.cta}
+              </a>
+            </MotionWrapper>
+          </MotionWrapper>
+        </section>
+      );
+    }
+
+    // Portfolio Card Component
+    function PortfolioCard({ item, openModal, language }) {
+      const t = translations[language].categories;
+      const cardRef = useRef(null);
+
+      useEffect(() => {
+        if (cardRef.current && window.VanillaTilt) {
+          window.VanillaTilt.init(cardRef.current, {
+            max: 20,
+            speed: 400,
+            glare: true,
+            'max-glare': 0.3,
+            scale: 1.05
+          });
+          return () => cardRef.current?.vanillaTilt?.destroy();
+        }
+      }, []);
+
+      return (
+        <MotionWrapper
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden cursor-pointer card-hover glass-effect glow-effect"
+          ref={cardRef}
+          onClick={() => openModal(item)}
+          title={item.description[language]}
+          role="button"
+          aria-label={`Open details for ${item.title}`}
+        >
+          <div className="relative overflow-hidden">
+            <img src={item.image} alt={item.title} className="w-full h-56 object-cover transition-transform duration-400 hover:scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-400"></div>
+          </div>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{item.title}</h3>
+              <span className="text-xs bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 px-3 py-1 rounded-full">
+                {t[item.category.toLowerCase().replace(/ and | /g, '')]}
+              </span>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed line-clamp-2">{item.description[language]}</p>
+            <span className="text-teal-500 hover:text-teal-600 font-semibold transition-colors duration-300">View Details →</span>
+          </div>
+        </MotionWrapper>
+      );
+    }
+
+    // Modal Component for Project Details
+    function ProjectModal({ item, closeModal, language }) {
+      if (!item) return null;
+      const t = translations[language].projectModal;
+      const c = translations[language].categories;
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (e.key === 'Escape') closeModal();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [closeModal]);
+
+      return (
+        <MotionWrapper
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={closeModal}
+          role="dialog"
+          aria-label="Project details modal"
+        >
+          <MotionWrapper
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.7, opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="bg-white dark:bg-gray-800 p-8 rounded-2xl max-w-2xl w-full glass-effect glow-effect"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-3xl font-extrabold text-gray-900 dark:text-white">{item.title}</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+                title={t.close}
+                aria-label={t.close}
+              >
+                ×
+              </button>
+            </div>
+            <div className="relative mb-6">
+              <img src={item.image} alt={item.title} className="w-full h-80 object-cover rounded-xl shadow-lg" />
+              <div className="absolute top-4 left-4">
+                <span className="bg-teal-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                  {c[item.category.toLowerCase().replace(/ and | /g, '')]}
+                </span>
+              </div>
+            </div>
+            <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{t.details}</h4>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed text-lg">{item.details[language]}</p>
+            <div className="flex gap-4">
+              <MotionWrapper
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                <a
+                  href={item.link}
+                  className="btn-gradient text-white py-3 px-8 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 glow-effect"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t.visit}
+                  aria-label={t.visit}
+                >
+                  {t.visit}
+                </a>
+              </MotionWrapper>
+              <MotionWrapper
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                <button
+                  onClick={closeModal}
+                  className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 px-8 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 glow-effect"
+                  title={t.close}
+                  aria-label={t.close}
+                >
+                  {t.close}
+                </button>
+              </MotionWrapper>
+            </div>
+          </MotionWrapper>
+        </MotionWrapper>
+      );
+    }
+
+    // Portfolio Section Component
+    function Portfolio({ openModal, language }) {
+      const t = translations[language].portfolio;
+      const c = translations[language].categories;
+      const [filter, setFilter] = useState("All");
+      const [isLoading, setIsLoading] = useState(true);
+      const categories = ["All", "IoT", "mobile", "Web Apps"];
+
+      useEffect(() => {
+        setTimeout(() => setIsLoading(false), 1000);
+      }, []);
+
+      const filteredItems = filter === "All" ? portfolioItems : portfolioItems.filter(item => item.category === filter);
+
+      return (
+        <section id="portfolio" className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900" aria-label="Portfolio section">
+          <div className="max-w-7xl mx-auto">
+            <MotionWrapper
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-4xl sm:text-5xl font-extrabold mb-4 text-gray-900 dark:text-white text-center">{t.title}</h2>
+              <p className="text-gray-600 dark:text-gray-300 text-lg sm:text-xl max-w-3xl mx-auto text-center">
+                {t.subtitle}
+              </p>
+            </MotionWrapper>
+            <div className="flex flex-wrap justify-center gap-4 mb-16 mt-8">
+              {categories.map((category, index) => (
+                <MotionWrapper
+                  key={category}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                >
+                  <button
+                    onClick={() => setFilter(category)}
+                    className={`px-6 py-3 rounded-xl font-semibold filter-btn ${
+                      filter === category
+                        ? "active"
+                        : "bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md"
+                    }`}
+                    title={c[category.toLowerCase().replace(/ and | /g, '')]}
+                    aria-label={`Filter by ${c[category.toLowerCase().replace(/ and | /g, '')]}`}
+                  >
+                    {c[category.toLowerCase().replace(/ and | /g, '')]}
+                  </button>
+                </MotionWrapper>
+              ))}
+            </div>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="loading-spinner" aria-label={t.loading}></div>
+                <p className="text-gray-600 dark:text-gray-300 text-lg mt-4">{t.loading}</p>
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600 dark:text-gray-300 text-lg">{t.noProjects}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                {filteredItems.map((item) => (
+                  <PortfolioCard key={item.id} item={item} openModal={openModal} language={language} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      );
+    }
+
+    // Contact Footer Component
+    function Footer({ language }) {
+      const t = translations[language].footer;
+      return (
+        <MotionWrapper
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <footer id="contact" className="bg-gray-800 dark:bg-gray-700 text-white py-20 glass-effect" aria-label="Contact section">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+              <h3 className="text-3xl sm:text-4xl font-extrabold mb-6 text-white">{t.title}</h3>
+              <p className="text-lg sm:text-xl mb-8 text-gray-200 max-w-3xl mx-auto">
+                {t.subtitle}
+              </p>
+              <div className="mb-8">
+                <a href="mailto:j3zp3rz@gmail.com" className="text-lg sm:text-xl mb-2 hover:text-teal-300 transition-colors duration-300" title={t.email} aria-label={t.email}>{t.email}</a>
+                <p className="text-gray-200">{t.emailNote}</p>
+              </div>
+              <div className="flex justify-center gap-8">
+                <MotionWrapper
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <a href="https://www.linkedin.com/in/jesper-karlsson-446375241/" target="_blank" rel="noopener noreferrer" className="hover:text-teal-300 transition-colors duration-300 text-lg font-semibold" title="LinkedIn" aria-label="LinkedIn">LinkedIn</a>
+                </MotionWrapper>
+                <MotionWrapper
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <a href="https://github.com/Deppinen" target="_blank" rel="noopener noreferrer" className="hover:text-teal-300 transition-colors duration-300 text-lg font-semibold" title="GitHub" aria-label="GitHub">GitHub</a>
+                </MotionWrapper>
+              </div>
+              <div className="mt-12 pt-8 border-t border-gray-600">
+                <p className="text-gray-300">{t.copyright}</p>
+              </div>
+            </div>
+          </footer>
+        </MotionWrapper>
+      );
+    }
+
+    // Back to Top Button
+    function BackToTop({ language }) {
+      const t = translations[language].navbar;
+      return (
+        <MotionWrapper
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="back-to-top"
+        >
+          <MotionWrapper
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+          >
+            <a
+              href="#home"
+              className="btn-gradient text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 glow-effect"
+              title={t.home}
+              aria-label={t.home}
+            >
+              ↑
+            </a>
+          </MotionWrapper>
+        </MotionWrapper>
+      );
+    }
+
+    // Main App Component
+    function App() {
+      const [isDark, setIsDark] = useState(() => {
+        const saved = localStorage.getItem('darkMode');
+        return saved !== null ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      });
+      const [language, setLanguage] = useState(() => {
+        const saved = localStorage.getItem('language');
+        if (saved) return saved;
+        return navigator.language.startsWith('sv') ? 'sv' : 'en';
+      });
+      const [selectedProject, setSelectedProject] = useState(null);
+
+      useEffect(() => {
+        document.body.classList.toggle('dark', isDark);
+      }, [isDark]);
+
+      const toggleTheme = () => {
+        const newDarkMode = !isDark;
+        setIsDark(newDarkMode);
+        localStorage.setItem('darkMode', JSON.stringify(newDarkMode));
+      };
+
+      const openModal = (item) => setSelectedProject(item);
+      const closeModal = () => setSelectedProject(null);
+
+      return (
+        <MotionWrapper
+          key={language}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Navbar toggleTheme={toggleTheme} isDark={isDark} language={language} setLanguage={setLanguage} />
+          <Hero language={language} />
+          <Portfolio openModal={openModal} language={language} />
+          <ProjectModal item={selectedProject} closeModal={closeModal} language={language} />
+          <Footer language={language} />
+          <BackToTop language={language} />
+        </MotionWrapper>
+      );
+    }
+
+    // Render the app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
